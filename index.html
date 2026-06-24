@@ -582,8 +582,8 @@
             { milestone: "18 → 19", credits: "810.00B", numericCost: 810000000000, droids: [{ material: "Diamond", family: "MECHA-DROID", rarity: "Legendary" }, { material: "Rainbow", family: "R7", rarity: "Legendary" }, { material: "Rainbow", family: "B2-RP", rarity: "Legendary" }] },
             { milestone: "19 → 20", credits: "2.00T", numericCost: 2000000000000, droids: [{ material: "Rainbow", family: "MONO-WALKER", rarity: "Legendary" }, { material: "Rainbow", family: "OPTI-STRIKE", rarity: "Legendary" }, { material: "Rainbow", family: "CYCLO-GRAV", rarity: "Legendary" }] },
             { milestone: "20 → 21", credits: "3.00T", numericCost: 3000000000000, droids: [{ material: "Beskar", family: "LO", rarity: "Epic" }, { material: "Beskar", family: "R6", rarity: "Epic" }, { material: "Beskar", family: "HAUL-R", rarity: "Epic" }] },
-            { milestone: "21 → 22", credits: "4.50T", numericCost: 4500000000000, droids: [{ material: "Beskar", family: "SEN-TRI", rarity: "Epic" }, { material: "Beskar", solid: true, family: "STRIKE-ORB", rarity: "Epic" }, { material: "Beskar", family: "PROTO-ROLLER", rarity: "Legendary" }] },
-            { milestone: "22 → 23", credits: "6.00T", numericCost: 6000000000000, droids: [{ material: "Beskar", family: "BB9", rarity: "Legendary" }, { material: "Beskar", family: "CYCLO-GRAV", rarity: "Legendary" }, { material: "B2-RP", rarity: "Legendary" }] }
+            { milestone: "21 → 22", credits: "4.50T", numericCost: 4500000000000, droids: [{ material: "Beskar", family: "SEN-TRI", rarity: "Epic" }, { material: "Beskar", family: "STRIKE-ORB", rarity: "Epic" }, { material: "Beskar", family: "PROTO-ROLLER", rarity: "Legendary" }] },
+            { milestone: "22 → 23", credits: "6.00T", numericCost: 6000000000000, droids: [{ material: "Beskar", family: "BB9", rarity: "Legendary" }, { material: "Beskar", family: "CYCLO-GRAV", rarity: "Legendary" }, { material: "Beskar", family: "B2-RP", rarity: "Legendary" }] }
         ],
         4: [
             { milestone: "0 → 1", credits: "10K", numericCost: 10000, droids: [{ material: "Basic", family: "ID10", rarity: "Common" }, { material: "Basic", family: "PIT", rarity: "Common" }, { material: "Basic", family: "DRK-1 PROBE", rarity: "Common" }] },
@@ -669,10 +669,10 @@
         trackingState = savedState && savedState.length === flatDroidsList.length 
             ? savedState 
             : new Array(flatDroidsList.length).fill(false);
-    }
 
-    let savedFilter = localStorage.getItem('fortnite_tycoon_filter_active');
-    if (savedFilter === 'true') hideCompletedFilter = true;
+        let savedFilter = localStorage.getItem('fortnite_tycoon_filter_active');
+        if (savedFilter === 'true') hideCompletedFilter = true;
+    }
 
     function initUI() {
         const sideContainer = document.getElementById('sidebar-container');
@@ -680,10 +680,12 @@
         
         sideContainer.innerHTML = '';
         mainContainer.innerHTML = '';
-        if(hideCompletedFilter) document.getElementById('toggle-filter').classList.add('active');
+        
+        const filterBtn = document.getElementById('toggle-filter');
+        if (hideCompletedFilter) filterBtn.classList.add('active');
+        else filterBtn.classList.remove('active');
 
         if (activeType === 'info') {
-            // Render the Droid Upgrade & Super Rebirth Rewards Layout inside Info Tab
             sideContainer.style.display = 'none';
             document.querySelector('.workspace').style.gridTemplateColumns = '1fr';
             
@@ -696,7 +698,6 @@
 
                     <div class="info-section-title">Droid Upgrade Matrix</div>
                     <div class="upgrade-matrix-grid">
-                        <!-- Common -->
                         <div class="rarity-upgrade-card rarity-common">
                             <div class="rarity-card-header">
                                 <span class="rarity-title" style="color: #4ade80;">Common</span>
@@ -709,7 +710,6 @@
                                 <div class="cost-step-item"><span class="step-path">Rainbow → Beskar</span><span class="step-value">80 Chips</span></div>
                             </div>
                         </div>
-                        <!-- Rare -->
                         <div class="rarity-upgrade-card rarity-rare">
                             <div class="rarity-card-header">
                                 <span class="rarity-title" style="color: #38bdf8;">Rare</span>
@@ -722,7 +722,6 @@
                                 <div class="cost-step-item"><span class="step-path">Rainbow → Beskar</span><span class="step-value">250 Chips</span></div>
                             </div>
                         </div>
-                        <!-- Epic -->
                         <div class="rarity-upgrade-card rarity-epic">
                             <div class="rarity-card-header">
                                 <span class="rarity-title" style="color: #a855f7;">Epic</span>
@@ -735,7 +734,6 @@
                                 <div class="cost-step-item"><span class="step-path">Rainbow → Beskar</span><span class="step-value">5,000 Chips</span></div>
                             </div>
                         </div>
-                        <!-- Legendary -->
                         <div class="rarity-upgrade-card rarity-legendary">
                             <div class="rarity-card-header">
                                 <span class="rarity-title" style="color: #fbbf24;">Legendary</span>
@@ -780,7 +778,6 @@
             return;
         }
 
-        // Restore default split layout for standard production channel timelines
         sideContainer.style.display = 'flex';
         document.querySelector('.workspace').style.gridTemplateColumns = '200px 1fr';
 
@@ -931,14 +928,16 @@
         localStorage.setItem('fortnite_tycoon_filter_active', hideCompletedFilter);
         
         const btn = document.getElementById('toggle-filter');
-        if(hideCompletedFilter) btn.classList.add('active');
+        if (hideCompletedFilter) btn.classList.add('active');
         else btn.classList.remove('active');
 
         saveAndSyncUI(true);
     }
 
     function saveAndSyncUI(initialRender = false) {
-        if (activeType === 'info') return;
+        if (activeType === 'info') {
+            return;
+        }
 
         if (!initialRender) {
             localStorage.setItem('fortnite_tycoon_multi_cycle_v3', JSON.stringify(trackingState));
