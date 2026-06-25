@@ -1,4 +1,4 @@
-const cyclesManifest = {
+    const cyclesManifest = {
         1: [
             { milestone: "0 → 1", credits: "10K", numericCost: 10000, droids: [{ material: "Basic", family: "CB", rarity: "Common" }, { material: "Basic", family: "PIT", rarity: "Common" }, { material: "Basic", family: "DRK-1 PROBE", rarity: "Common" }] },
             { milestone: "1 → 2", credits: "150K", numericCost: 150000, droids: [{ material: "Basic", family: "BDX EXPLORER", rarity: "Rare" }, { material: "Basic", family: "2BB", rarity: "Rare" }, { material: "Basic", family: "BAL-CORE", rarity: "Rare" }] },
@@ -47,7 +47,7 @@ const cyclesManifest = {
             { milestone: "19 → 20", credits: "2.00T", numericCost: 2000000000000, droids: [{ material: "Rainbow", family: "MONO-WALKER", rarity: "Legendary" }, { material: "Rainbow", family: "OPTI-STRIKE", rarity: "Legendary" }, { material: "Rainbow", family: "CYCLO-GRAV", rarity: "Legendary" }] },
             { milestone: "20 → 21", credits: "3.00T", numericCost: 3000000000000, droids: [{ material: "Beskar", family: "LO", rarity: "Epic" }, { material: "Beskar", family: "R6", rarity: "Epic" }, { material: "Beskar", family: "HAUL-R", rarity: "Epic" }] },
             { milestone: "21 → 22", credits: "4.50T", numericCost: 4500000000000, droids: [{ material: "Beskar", family: "SEN-TRI", rarity: "Epic" }, { material: "Beskar", family: "STRIKE-ORB", rarity: "Epic" }, { material: "Beskar", family: "PROTO-ROLLER", rarity: "Legendary" }] },
-            { milestone: "22 → 23", credits: "6.00T", numericCost: 6000000000000, droids: [{ material: "Beskar", family: "BB9", rarity: "Legendary" }, { material: "Beskar", family: "CYCLO-GRAV", rarity: "Legendary" }, { material: "Beskar", family: "B2-RP", rarity: "Legendary" }] }
+            { milestone: "22 → 23", credits: "6.00T", numericCost: 6000000000000, droids: [{ material: "Beskar", family: "BB9", rarity: "Legendary" }, { material: "Beskar", family: "CYCLO-GRAV", rarity: "Legendary" }, { material: "B2-RP", family: "B2-RP", rarity: "Legendary" }] }
         ],
         3: [
             { milestone: "0 → 1", credits: "10K", numericCost: 10000, droids: [{ material: "Basic", family: "MOUSE", rarity: "Common" }, { material: "Basic", family: "PIT", rarity: "Common" }, { material: "Basic", family: "GONK", rarity: "Common" }] },
@@ -101,6 +101,29 @@ const cyclesManifest = {
         ]
     };
 
+// RESTORED: Hardcoded Matrix Datasets
+const upgradeMatrixData = [
+  { rarity: "Common", total: "155 Chips", paths: [{ step: "Default → Gold", cost: "10" }, { step: "Gold → Diamond", cost: "25" }, { step: "Diamond → Rainbow", cost: "40" }, { step: "Rainbow → Beskar", cost: "80" }] },
+  { rarity: "Rare", total: "440 Chips", paths: [{ step: "Default → Gold", cost: "30" }, { step: "Gold → Diamond", cost: "60" }, { step: "Diamond → Rainbow", cost: "100" }, { step: "Rainbow → Beskar", cost: "250" }] },
+  { rarity: "Epic", total: "5,540 Chips", paths: [{ step: "Default → Gold", cost: "120" }, { step: "Gold → Diamond", cost: "180" }, { step: "Diamond → Rainbow", cost: "240" }, { step: "Rainbow → Beskar", cost: "5,000" }] },
+  { rarity: "Legendary", total: "17,600 Chips", paths: [{ step: "Default → Gold", cost: "400" }, { step: "Gold → Diamond", cost: "1,200" }, { step: "Diamond → Rainbow", cost: "4,000" }, { step: "Rainbow → Beskar", cost: "12,000" }] }
+];
+
+const rewardsMatrixData = [
+  { rb: "RB12", cry: "+11", cred: "22%", xp: "110%" },
+  { rb: "RB13", cry: "+16", cred: "32%", xp: "160%" },
+  { rb: "RB14", cry: "+22", cred: "44%", xp: "220%" },
+  { rb: "RB15", cry: "+29", cred: "58%", xp: "290%" },
+  { rb: "RB16", cry: "+37", cred: "74%", xp: "370%" },
+  { rb: "RB17", cry: "+46", cred: "92%", xp: "460%" },
+  { rb: "RB18", cry: "+56", cred: "112%", xp: "560%" },
+  { rb: "RB19", cry: "+67", cred: "134%", xp: "670%" },
+  { rb: "RB20", cry: "+79", cred: "158%", xp: "790%" },
+  { rb: "RB21", cry: "+92", cred: "184%", xp: "920%" },
+  { rb: "RB22", cry: "+106", cred: "212%", xp: "1060%" },
+  { rb: "RB23", cry: "+121", cred: "242%", xp: "1210%" }
+];
+
 const state = {
   activeCycle: 1,
   checks: {},
@@ -144,7 +167,7 @@ function formatTime(mins) {
 
 function buildFlatNodes() {
   let idx = 0;
-  nodesList.length = 0; // Reset array
+  nodesList.length = 0;
   Object.keys(cyclesManifest).forEach(cKey => {
     const cycleNum = parseInt(cKey);
     cyclesManifest[cycleNum].forEach((tierData, tIdx) => {
@@ -165,7 +188,6 @@ function buildFlatNodes() {
   });
 }
 
-// BUG FIX: Checks off ALL lower tier droids matching the family string, regardless of material type setup
 function cascadeProgression(globalIdx, targetState) {
   const node = nodesList[globalIdx];
   if (!node || !targetState) return;
@@ -176,13 +198,11 @@ function cascadeProgression(globalIdx, targetState) {
   });
 }
 
-// BUG FIX: Only flags the SINGLE highest checked tier node for a given family as safe to sell
 function computeSafeToSell() {
   const safeFlags = {};
   nodesList.forEach(n => { safeFlags[n.globalIdx] = false; });
   const activeNodes = nodesList.filter(n => n.cycle === state.activeCycle);
 
-  // Group verified items by family string
   const checkedFamilies = {};
   activeNodes.forEach(n => {
     if (state.checks[n.globalIdx]) {
@@ -193,7 +213,6 @@ function computeSafeToSell() {
     }
   });
 
-  // Flag ONLY the highest index item path inside the family
   Object.keys(checkedFamilies).forEach(fam => {
     const nodes = checkedFamilies[fam];
     if (nodes.length > 0) {
@@ -226,6 +245,54 @@ function load() {
 
 function save() {
   localStorage.setItem("tycoon_tracker_pro_state", JSON.stringify(state));
+}
+
+// RESTORED: Render functions for generating structural visual widgets
+function renderStaticMatrices() {
+  // Render Upgrade Matrix Widget
+  const upgradeContainer = $("#blueprintMatrixSection");
+  if (upgradeContainer) {
+    let html = `<div class="section-title">Droid Upgrade Matrix</div><div class="upgrade-matrix-grid">`;
+    upgradeMatrixData.forEach(m => {
+      html += `
+        <div class="rarity-upgrade-card">
+          <div class="rarity-card-header">
+            <span class="rarity-title rarity-${m.rarity.toLowerCase()}">${m.rarity}</span>
+            <span class="rarity-total">${m.total}</span>
+          </div>
+          <div class="stack" style="gap:4px;">
+      `;
+      m.paths.forEach(p => {
+        html += `
+          <div style="display:flex; justify-content:space-between; font-size:11px;">
+            <span style="color:var(--muted);">${p.step}</span>
+            <span style="font-weight:600; color:#fff;">${p.cost} Chips</span>
+          </div>
+        `;
+      });
+      html += `</div></div>`;
+    });
+    html += `</div>`;
+    upgradeContainer.innerHTML = html;
+  }
+
+  // Render Rewards Matrix Widget
+  const rewardsContainer = $("#rewardsMatrixSection");
+  if (rewardsContainer) {
+    let html = `<div class="section-title">Super Rebirth Rewards Matrix</div><div class="rewards-matrix-grid">`;
+    rewardsMatrixData.forEach(r => {
+      html += `
+        <div class="reward-matrix-card">
+          <div class="reward-rb-badge">${r.rb}</div>
+          <div class="reward-stat-row"><span class="stat-label">Crystals</span><span class="stat-value highlight-crystal">${r.cry}</span></div>
+          <div class="reward-stat-row"><span class="stat-label">Credits</span><span class="stat-value">${r.cred}</span></div>
+          <div class="reward-stat-row"><span class="stat-label">XP Buff</span><span class="stat-value highlight-xp">${r.xp}</span></div>
+        </div>
+      `;
+    });
+    html += `</div>`;
+    rewardsContainer.innerHTML = html;
+  }
 }
 
 function sync() {
@@ -500,6 +567,7 @@ window.addEventListener("DOMContentLoaded", () => {
   load();
   renderTabs();
   renderGoalSelector();
+  renderStaticMatrices(); // RESTORED: Appends tables to the sidebar on runtime
   initEventPipelines();
   
   $("#customNotes").value = state.customNotes || "";
