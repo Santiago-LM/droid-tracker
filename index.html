@@ -814,7 +814,7 @@ function sync() {
   mainView.innerHTML = "";
 
   activeManifest.forEach((tierData, tIdx) => {
-    const tierNodes = totalInCycle.filter(n => n.tier === tIdx);
+    const tierNodes = totalInCycle.filter(n => n.cycle === state.activeCycle && n.tier === tIdx);
     const checkedCount = tierNodes.filter(n => state.checks[n.globalIdx]).length;
     const totalCount = tierNodes.length;
 
@@ -859,13 +859,17 @@ function sync() {
       if (!(passedSearch && passedRarity && passedMat && passedStatus)) return;
       if (isChecked && state.hideCompleted) return;
 
-      // Safe To Sell Checking Logic: Look for upcoming, incomplete tiers in the active cycle requiring this family
-      const isNeededInFutureTiers = totalInCycle.some(futureNode => 
-        futureNode.tier > n.tier && 
-        futureNode.family === n.family && 
-        !state.checks[futureNode.globalIdx]
-      );
-      const isSafeToSell = isChecked && !isNeededInFutureTiers;
+      // Find all nodes belonging to this family path inside the active cycle
+      const familyNodes = totalInCycle.filter(fNode => fNode.family === n.family);
+      
+      // Determine the highest tier level that is currently marked complete
+      const highestCheckedTier = Math.max(...familyNodes.filter(fNode => state.checks[fNode.globalIdx]).map(fNode => fNode.tier), -1);
+      
+      // Look for any upcoming tiers later in the timeline that are still incomplete
+      const hasIncompleteFuture = familyNodes.some(fNode => fNode.tier > n.tier && !state.checks[fNode.globalIdx]);
+
+      // Only mark as safe to sell if this specific node is the highest checked iteration AND no incomplete requirements remain downstream
+      const isSafeToSell = isChecked && (n.tier === highestCheckedTier) && !hasIncompleteFuture;
 
       const card = document.createElement("div");
       card.className = `droid mat-theme-${n.material.toLowerCase()} ${isChecked ? 'checked' : ''} ${isSafeToSell ? 'safe-to-sell' : ''}`;
