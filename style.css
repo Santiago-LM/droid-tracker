@@ -12,7 +12,7 @@
   --muted: #9ca3af;
 
   --ok: #10b981;
-  --ok-glow: rgba(16, 185, 129, 0.15);
+  --ok-glow: rgba(16, 185, 129, 0.25);
   --warn: #f59e0b;
   --bad: #ef4444;
   --bad-glow: rgba(239, 68, 68, 0.12);
@@ -232,16 +232,32 @@ main {
   align-items: center;
   padding: 12px 16px;
   border-radius: var(--radius);
+  border: 1px solid transparent;
 }
 
+/* MODIFIED: High-visibility glowing neon glass border for complete Rebirth items */
 .tier.done {
-  border-color: rgba(16, 185, 129, 0.2);
-  background: linear-gradient(180deg, rgba(16, 185, 129, 0.06), rgba(6, 78, 59, 0.03));
+  border-color: var(--ok) !important;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(9, 13, 22, 0.7)) !important;
+  box-shadow: 0 8px 32px 0 rgba(16, 185, 129, 0.04), inset 0 0 16px rgba(16, 185, 129, 0.08) !important;
+}
+
+/* Spruces up layout internals inside a fully completed row */
+.tier.done .tmeta-header span:first-child {
+  color: #34d399 !important;
+  font-weight: 800;
+  text-shadow: 0 0 8px rgba(52, 211, 153, 0.3);
+}
+
+.tier.done .counter-badge {
+  background: rgba(16, 185, 129, 0.2) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .tier .tmeta { font-weight: 700; font-size: 14px; color: #fff; }
 .tier .tmeta-header { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
-.tier .counter-badge { font-size: 11px; font-weight: 800; color: var(--cyan); background: rgba(34, 211, 238, 0.1); padding: 1px 6px; border-radius: 4px; }
+.tier .counter-badge { font-size: 11px; font-weight: 800; color: var(--cyan); background: rgba(34, 211, 238, 0.1); padding: 1px 6px; border-radius: 4px; transition: all 0.2s ease; }
 .tier .tcost { font-size: 13px; font-weight: 600; color: var(--cyan); }
 .cards { display: flex; gap: 8px; flex-wrap: wrap; flex: 1; }
 
