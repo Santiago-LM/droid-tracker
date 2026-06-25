@@ -200,25 +200,34 @@ function cascadeProgression(globalIdx, targetState) {
 
 function computeSafeToSell() {
   const safeFlags = {};
+  // Initialize all nodes to false
   nodesList.forEach(n => { safeFlags[n.globalIdx] = false; });
+  
+  // Get all droids belonging to the active cycle manifest
   const activeNodes = nodesList.filter(n => n.cycle === state.activeCycle);
 
-  const checkedFamilies = {};
   activeNodes.forEach(n => {
+    // A droid can only be safe to sell if you actually own/checked it
     if (state.checks[n.globalIdx]) {
-      if (!checkedFamilies[n.family]) {
-        checkedFamilies[n.family] = [];
-      }
-      checkedFamilies[n.family].push(n);
-    }
-  });
+      
+      // 1. Check if there are any future uncompleted milestones for this family
+      const hasFutureRequirement = activeNodes.some(other => 
+        other.family === n.family && 
+        other.tier > n.tier && 
+        !state.checks[other.globalIdx]
+      );
+      
+      // 2. Ensure this is the absolute highest checked tier for this family
+      const isHighestChecked = !activeNodes.some(other =>
+        other.family === n.family &&
+        other.tier > n.tier &&
+        state.checks[other.globalIdx]
+      );
 
-  Object.keys(checkedFamilies).forEach(fam => {
-    const nodes = checkedFamilies[fam];
-    if (nodes.length > 0) {
-      nodes.sort((a, b) => b.tier - a.tier);
-      const highestNode = nodes[0];
-      safeFlags[highestNode.globalIdx] = true;
+      // Only mark safe if it satisfies both rules
+      if (!hasFutureRequirement && isHighestChecked) {
+        safeFlags[n.globalIdx] = true;
+      }
     }
   });
 
