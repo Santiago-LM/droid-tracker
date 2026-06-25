@@ -339,23 +339,63 @@ function sync() {
     $("#etaText").textContent = `ETA: -`;
   }
 
+  // --- EXPANDED GOAL TRACKING SYSTEM FOR #goalSummary ---
   const goalIdx = parseInt(state.goalRb);
-  let goalAccumulator = 0;
-  manifest.forEach((tier, idx) => {
-    if (idx < goalIdx) {
-      const tierNodes = activeNodes.filter(n => n.tier === (idx + 1));
-      const tierDone = tierNodes.every(n => state.checks[n.globalIdx]);
-      if (!tierDone) goalAccumulator += tier.numericCost;
-    }
-  });
-
+  
   if (goalIdx > 0) {
-    const goalMins = state.creditsPerMin > 0 ? (goalAccumulator / state.creditsPerMin) : Infinity;
-    $("#goalSummary").innerHTML = `
-      <strong>Target Goal: Rebirth #${goalIdx}</strong><br/>
-      Credits Required: ${formatShorthand(goalAccumulator)}<br/>
-      Time Allocation Needed: ${formatTime(goalMins)}
+    let htmlSummary = `<div style="display:flex; flex-direction:column; gap:8px;">`;
+    htmlSummary += `<div><strong>Target Goal Roadmap: Rebirth #${goalIdx}</strong></div>`;
+    
+    let totalAccumulatedCredits = 0;
+    let baselineReached = false;
+    let ongoingTimelineHtml = "";
+
+    manifest.forEach((tier, idx) => {
+      const currentTierNum = idx + 1;
+      const tierNodes = activeNodes.filter(n => n.tier === currentTierNum);
+      const tierDone = tierNodes.every(n => state.checks[n.globalIdx]);
+
+      // Process tiers up to your selected target goal level
+      if (currentTierNum <= goalIdx) {
+        if (!tierDone) {
+          // If a tier isn't completed, add it to our future timeline calculation
+          totalAccumulatedCredits += tier.numericCost;
+          const individualMins = state.creditsPerMin > 0 ? (tier.numericCost / state.creditsPerMin) : Infinity;
+          const runningTotalMins = state.creditsPerMin > 0 ? (totalAccumulatedCredits / state.creditsPerMin) : Infinity;
+
+          ongoingTimelineHtml += `
+            <div style="padding:6px; background:rgba(255,255,255,0.03); border-radius:4px; border-left:2px solid var(--cyan); font-size:11px;">
+              <div style="display:flex; justify-content:space-between; font-weight:600; color:#fff;">
+                <span>RB #${currentTierNum} (${tier.credits})</span>
+                <span style="color:var(--cyan)">+${formatTime(individualMins)}</span>
+              </div>
+              <div style="color:var(--muted); font-size:10px; margin-top:2px; display:flex; justify-content:space-between;">
+                <span>Cumulative Cost: ${formatShorthand(totalAccumulatedCredits)}</span>
+                <span>Total ETA: ${formatTime(runningTotalMins)}</span>
+              </div>
+            </div>
+          `;
+        }
+      }
+    });
+
+    // Main header breakdown summary card
+    htmlSummary += `
+      <div style="font-size:11px; margin-bottom:4px; padding-bottom:6px; border-bottom:1px dashed rgba(255,255,255,0.1);">
+        Total Future Credits: <span style="color:var(--cyan); font-weight:700;">${formatShorthand(totalAccumulatedCredits)}</span><br/>
+        Total Journey Time: <span style="color:#fff; font-weight:700;">${state.creditsPerMin > 0 ? formatTime(totalAccumulatedCredits / state.creditsPerMin) : "-"}</span>
+      </div>
     `;
+
+    // Append the roadmap steps if there are uncompleted milestones ahead
+    if (ongoingTimelineHtml !== "") {
+      htmlSummary += `<div style="display:flex; flex-direction:column; gap:6px; max-height:180px; overflow-y:auto; padding-right:4px;">${ongoingTimelineHtml}</div>`;
+    } else {
+      htmlSummary += `<div style="color:var(--ok); font-size:11px; font-weight:600;">✓ You have already checked off all milestones up to Rebirth #${goalIdx}!</div>`;
+    }
+
+    htmlSummary += `</div>`;
+    $("#goalSummary").innerHTML = htmlSummary;
   } else {
     $("#goalSummary").textContent = "Goal configuration clear.";
   }
